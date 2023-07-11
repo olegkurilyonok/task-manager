@@ -2,7 +2,6 @@ package com.example.taskmanager.services;
 
 import com.example.taskmanager.dtos.RegistrationUserDto;
 import com.example.taskmanager.entites.User;
-import com.example.taskmanager.repositories.RoleRepository;
 import com.example.taskmanager.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,7 +19,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
 
@@ -46,7 +45,7 @@ public class UserService implements UserDetailsService {
     public void createUser(RegistrationUserDto userDto) {
         User user = User.builder()
                 .email(userDto.getEmail())
-                .roles(List.of(roleRepository.findByName("ROLE_USER").get()))
+                .roles(List.of(roleService.getRole()))
                 .password(encoder.encode(userDto.getPassword()))
                 .username(userDto.getUsername())
                 .build();

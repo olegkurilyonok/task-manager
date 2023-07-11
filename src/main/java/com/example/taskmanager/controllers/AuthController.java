@@ -1,18 +1,10 @@
 package com.example.taskmanager.controllers;
 
 import com.example.taskmanager.dtos.JWTRequest;
-import com.example.taskmanager.dtos.JWTResponse;
 import com.example.taskmanager.dtos.RegistrationUserDto;
-import com.example.taskmanager.exceptions.AppError;
-import com.example.taskmanager.services.UserService;
-import com.example.taskmanager.utils.JWTokenUtils;
+import com.example.taskmanager.services.AuthService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,31 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
-    private final UserService userService;
-    private final JWTokenUtils JWTokenUtils;
-    private final AuthenticationManager authenticationManager;
+    private final AuthService authService;
 
     @PostMapping("/auth")
     public ResponseEntity<?> createAuthToken(@RequestBody JWTRequest request) {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        } catch (BadCredentialsException e) {
-            return new ResponseEntity<>(new AppError(HttpStatus.UNAUTHORIZED.value(), "Wrong login or password"), HttpStatus.UNAUTHORIZED);
-        }
-        UserDetails userDetails = userService.loadUserByUsername(request.getUsername());
-        String token = JWTokenUtils.generateToken(userDetails);
-        return ResponseEntity.ok(new JWTResponse(token));
+        return authService.createAuthToken(request);
     }
 
     @PostMapping("/registration")
     public ResponseEntity createNewUser(@RequestBody RegistrationUserDto request) {
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(), "Passwords not matched"), HttpStatus.BAD_REQUEST);
-        }
-        if (userService.findByUsername(request.getUsername()).isPresent()) {
-            return new ResponseEntity(new AppError(HttpStatus.BAD_REQUEST.value(), "Login is already taken"), HttpStatus.BAD_REQUEST);
-        }
-        userService.createUser(request);
-        return ResponseEntity.ok().build();
+        return authService.createNewUser(request);
     }
 }
