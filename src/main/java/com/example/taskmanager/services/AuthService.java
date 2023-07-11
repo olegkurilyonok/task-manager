@@ -4,6 +4,7 @@ import com.example.taskmanager.dtos.JWTRequest;
 import com.example.taskmanager.dtos.JWTResponse;
 import com.example.taskmanager.dtos.RegistrationUserDto;
 import com.example.taskmanager.exceptions.AppError;
+import com.example.taskmanager.utils.JWTokenUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
     private final UserService userService;
-    private final com.example.taskmanager.utils.JWTokenUtils JWTokenUtils;
+    private final JWTokenUtils jwTokenUtils;
     private final AuthenticationManager authenticationManager;
 
     public ResponseEntity<?> createAuthToken(JWTRequest request) {
@@ -28,16 +29,16 @@ public class AuthService {
             return new ResponseEntity<>(new AppError(HttpStatus.UNAUTHORIZED.value(), "Wrong login or password"), HttpStatus.UNAUTHORIZED);
         }
         UserDetails userDetails = userService.loadUserByUsername(request.getUsername());
-        String token = JWTokenUtils.generateToken(userDetails);
+        String token = jwTokenUtils.generateToken(userDetails);
         return ResponseEntity.ok(new JWTResponse(token));
     }
 
-    public ResponseEntity createNewUser(RegistrationUserDto request) {
+    public ResponseEntity<?> createNewUser(RegistrationUserDto request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(), "Passwords not matched"), HttpStatus.BAD_REQUEST);
         }
         if (userService.findByUsername(request.getUsername()).isPresent()) {
-            return new ResponseEntity(new AppError(HttpStatus.BAD_REQUEST.value(), "Login is already taken"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(), "Login is already taken"), HttpStatus.BAD_REQUEST);
         }
         userService.createUser(request);
         return ResponseEntity.ok().build();

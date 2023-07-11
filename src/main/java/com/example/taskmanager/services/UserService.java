@@ -1,5 +1,6 @@
 package com.example.taskmanager.services;
 
+import com.example.taskmanager.configs.EncryptedComponent;
 import com.example.taskmanager.dtos.RegistrationUserDto;
 import com.example.taskmanager.entites.User;
 import com.example.taskmanager.repositories.UserRepository;
@@ -8,7 +9,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +21,7 @@ public class UserService implements UserDetailsService {
 
     private final RoleService roleService;
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder encoder;
+    private final EncryptedComponent encryptedComponent;
 
 
     public Optional<User> findByUsername(String username) {
@@ -46,7 +46,7 @@ public class UserService implements UserDetailsService {
         User user = User.builder()
                 .email(userDto.getEmail())
                 .roles(List.of(roleService.getRole()))
-                .password(encoder.encode(userDto.getPassword()))
+                .password(encryptedComponent.bCryptPasswordEncoder().encode(userDto.getPassword()))
                 .username(userDto.getUsername())
                 .build();
 
