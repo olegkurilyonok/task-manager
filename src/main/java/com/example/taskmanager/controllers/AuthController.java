@@ -2,6 +2,7 @@ package com.example.taskmanager.controllers;
 
 import com.example.taskmanager.dtos.JWTRequest;
 import com.example.taskmanager.dtos.JWTResponse;
+import com.example.taskmanager.dtos.RegistrationUserDto;
 import com.example.taskmanager.exceptions.AppError;
 import com.example.taskmanager.services.UserService;
 import com.example.taskmanager.utils.JWTokenUtils;
@@ -32,11 +33,18 @@ public class AuthController {
         }
         UserDetails userDetails = userService.loadUserByUsername(request.getUsername());
         String token = JWTokenUtils.generateToken(userDetails);
-        return new ResponseEntity<>(new JWTResponse(token), HttpStatus.OK);
+        return ResponseEntity.ok(new JWTResponse(token));
     }
 
-    @PostMapping("/echo")
-    public String testService(@RequestBody JWTRequest request) {
-        return String.join(",", request.getUsername(), request.getPassword());
+    @PostMapping("/registration")
+    public ResponseEntity createNewUser(@RequestBody RegistrationUserDto request) {
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(), "Passwords not matched"), HttpStatus.BAD_REQUEST);
+        }
+        if (userService.findByUsername(request.getUsername()).isPresent()) {
+            return new ResponseEntity(new AppError(HttpStatus.BAD_REQUEST.value(), "Login is already taken"), HttpStatus.BAD_REQUEST);
+        }
+        userService.createUser(request);
+        return ResponseEntity.ok().build();
     }
 }

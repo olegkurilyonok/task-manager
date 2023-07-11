@@ -1,5 +1,6 @@
 package com.example.taskmanager.services;
 
+import com.example.taskmanager.dtos.RegistrationUserDto;
 import com.example.taskmanager.entites.User;
 import com.example.taskmanager.repositories.RoleRepository;
 import com.example.taskmanager.repositories.UserRepository;
@@ -8,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ public class UserService implements UserDetailsService {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder encoder;
+
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
@@ -39,8 +43,14 @@ public class UserService implements UserDetailsService {
         );
     }
 
-    public void createUser(User user) {
-        user.setRoles(List.of(roleRepository.findByName("ROLE_USER").get()));
+    public void createUser(RegistrationUserDto userDto) {
+        User user = User.builder()
+                .email(userDto.getEmail())
+                .roles(List.of(roleRepository.findByName("ROLE_USER").get()))
+                .password(encoder.encode(userDto.getPassword()))
+                .username(userDto.getUsername())
+                .build();
+
         userRepository.save(user);
     }
 }
